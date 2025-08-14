@@ -1,0 +1,72 @@
+# Production configuration for docker-compose
+version: '3.8'
+
+services:
+  db:
+    environment:
+      POSTGRES_DB: ${DB_NAME:-flowsketch}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+
+  backend:
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME:-flowsketch}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+    restart: unless-stopped
+    command: >
+      sh -c "
+        python manage.py collectstatic --noinput &&
+        python manage.py migrate &&
+        gunicorn flowsketch.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+      "
+
+  celery_worker:
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME:-flowsketch}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+    restart: unless-stopped
+    command: celery -A flowsketch worker --loglevel=info --concurrency=2
+
+  celery_beat:
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME:-flowsketch}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+    restart: unless-stopped
+    command: celery -A flowsketch beat --loglevel=info
+
+  nginx:
+    profiles: []  # Always include nginx in production

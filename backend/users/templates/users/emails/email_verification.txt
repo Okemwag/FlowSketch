@@ -1,0 +1,21 @@
+FlowSketch - Verify Your Email Address
+
+Hi {{ user.first_name|default:user.username }},
+
+Welcome to FlowSketch! To complete your registration and start creating amazing diagrams and specifications, please verify your email address.
+
+Your verification code is: {{ code }}
+
+You can also visit this link to verify your email:
+{{ verification_url }}
+
+SECURITY NOTE: This verification code will expire in 24 hours. If you didn't create an account with FlowSketch, please ignore this email.
+
+If you have any questions or need help, feel free to contact our support team.
+
+Best regards,
+The FlowSketch Team
+
+---
+This email was sent to {{ user.email }}. If you didn't request this verification, please ignore this email.
+© 2025 FlowSketch. All rights reserved.

@@ -1,0 +1,28 @@
+# Development overrides for docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=flowsketch.settings
+    volumes:
+      - ./backend:/app:cached
+    command: >
+      sh -c "
+        python manage.py collectstatic --noinput &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000 --settings=flowsketch.settings
+      "
+    stdin_open: true
+    tty: true
+
+  celery_worker:
+    volumes:
+      - ./backend:/app:cached
+    command: celery -A flowsketch worker --loglevel=debug --reload
+
+  celery_beat:
+    volumes:
+      - ./backend:/app:cached
+    command: celery -A flowsketch beat --loglevel=debug

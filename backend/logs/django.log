@@ -1,0 +1,6 @@
+Registration failed: duplicate key value violates unique constraint "users_userprofile_user_id_key"
+DETAIL:  Key (user_id)=(1) already exists.
+
+Registration failed: duplicate key value violates unique constraint "users_userprofile_user_id_key"
+DETAIL:  Key (user_id)=(2) already exists.
+
