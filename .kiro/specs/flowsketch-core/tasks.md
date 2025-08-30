@@ -7,46 +7,46 @@
   - Set up PostgreSQL database with Django migrations
   - _Requirements: 6.1, 6.4_
 
-- [-] 2. Implement text parsing and entity extraction
+- [x] 2. Implement text parsing and entity extraction
   - [x] 2.1 Create text parser service with basic entity extraction
     - Implement TextParserService class with spaCy integration in Django
     - Write unit tests using pytest for entity extraction from sample text inputs
     - Create Django REST API endpoint for text parsing functionality
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 2.2 Implement relationship detection algorithms
+  - [x] 2.2 Implement relationship detection algorithms
     - Code relationship identification logic between extracted entities
     - Write unit tests for various relationship patterns
     - Add relationship detection to the parsing pipeline
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 2.3 Add diagram type determination logic
+  - [x] 2.3 Add diagram type determination logic
     - Implement algorithm to suggest appropriate diagram types based on content
     - Write unit tests for diagram type classification
     - Integrate diagram type suggestion into parser service
     - _Requirements: 1.2, 1.4_
 
 - [ ] 3. Build diagram generation engine
-  - [ ] 3.1 Implement basic Mermaid diagram generation
+  - [x] 3.1 Implement basic Mermaid diagram generation
     - Create DiagramEngine Django service that converts parsed content to Mermaid syntax
     - Write pytest unit tests for flowchart, ERD, and sequence diagram generation
     - Add auto-layout algorithms for node positioning using Python libraries
     - _Requirements: 1.2, 1.3_
 
-  - [ ] 3.2 Add diagram validation and error handling
+  - [x] 3.2 Add diagram validation and error handling
     - Implement diagram validation logic for structural correctness
     - Write unit tests for validation edge cases
     - Add error handling for malformed diagram data
     - _Requirements: 1.4_
 
 - [ ] 4. Create specification generation system
-  - [ ] 4.1 Implement specification generator from diagram data
+  - [x] 4.1 Implement specification generator from diagram data
     - Code SpecificationGenerator Django service that creates Markdown specs from diagrams
     - Write pytest unit tests for specification structure and content generation
     - Add acceptance criteria generation for workflow steps using AI integration
     - _Requirements: 3.1, 3.2_
 
-  - [ ] 4.2 Add test scaffold generation
+  - [x] 4.2 Add test scaffold generation
     - Implement test generation logic for multiple programming languages using Django
     - Write pytest unit tests for test scaffold creation
     - Add integration with specification acceptance criteria
