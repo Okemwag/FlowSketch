@@ -14,19 +14,22 @@ def send_verification_email(user_id, token_id):
     try:
         user = User.objects.get(id=user_id)
         token = EmailVerificationToken.objects.get(id=token_id)
-        
-        subject = 'Verify your FlowSketch account'
-        
+
+        subject = "Verify your FlowSketch account"
+
         # Render HTML email template
-        html_message = render_to_string('users/emails/verification_email.html', {
-            'user': user,
-            'verification_code': token.code,
-            'verification_url': f"{settings.FRONTEND_URL}/verify-email/{token.token}",
-        })
-        
+        html_message = render_to_string(
+            "users/emails/verification_email.html",
+            {
+                "user": user,
+                "verification_code": token.code,
+                "verification_url": f"{settings.FRONTEND_URL}/verify-email/{token.token}",
+            },
+        )
+
         # Create plain text version
         plain_message = strip_tags(html_message)
-        
+
         send_mail(
             subject=subject,
             message=plain_message,
@@ -35,9 +38,9 @@ def send_verification_email(user_id, token_id):
             html_message=html_message,
             fail_silently=False,
         )
-        
+
         return f"Verification email sent to {user.email}"
-        
+
     except (User.DoesNotExist, EmailVerificationToken.DoesNotExist) as e:
         return f"Error sending verification email: {str(e)}"
 
@@ -48,19 +51,22 @@ def send_password_reset_email(user_id, token_id):
     try:
         user = User.objects.get(id=user_id)
         token = PasswordResetToken.objects.get(id=token_id)
-        
-        subject = 'Reset your FlowSketch password'
-        
+
+        subject = "Reset your FlowSketch password"
+
         # Render HTML email template
-        html_message = render_to_string('users/emails/password_reset_email.html', {
-            'user': user,
-            'reset_code': token.code,
-            'reset_url': f"{settings.FRONTEND_URL}/reset-password/{token.token}",
-        })
-        
+        html_message = render_to_string(
+            "users/emails/password_reset_email.html",
+            {
+                "user": user,
+                "reset_code": token.code,
+                "reset_url": f"{settings.FRONTEND_URL}/reset-password/{token.token}",
+            },
+        )
+
         # Create plain text version
         plain_message = strip_tags(html_message)
-        
+
         send_mail(
             subject=subject,
             message=plain_message,
@@ -69,9 +75,9 @@ def send_password_reset_email(user_id, token_id):
             html_message=html_message,
             fail_silently=False,
         )
-        
+
         return f"Password reset email sent to {user.email}"
-        
+
     except (User.DoesNotExist, PasswordResetToken.DoesNotExist) as e:
         return f"Error sending password reset email: {str(e)}"
 
@@ -81,17 +87,20 @@ def send_welcome_email(user_id):
     """Send welcome email to new users."""
     try:
         user = User.objects.get(id=user_id)
-        
-        subject = 'Welcome to FlowSketch!'
-        
+
+        subject = "Welcome to FlowSketch!"
+
         # Render HTML email template
-        html_message = render_to_string('users/emails/welcome_email.html', {
-            'user': user,
-        })
-        
+        html_message = render_to_string(
+            "users/emails/welcome_email.html",
+            {
+                "user": user,
+            },
+        )
+
         # Create plain text version
         plain_message = strip_tags(html_message)
-        
+
         send_mail(
             subject=subject,
             message=plain_message,
@@ -100,9 +109,9 @@ def send_welcome_email(user_id):
             html_message=html_message,
             fail_silently=False,
         )
-        
+
         return f"Welcome email sent to {user.email}"
-        
+
     except User.DoesNotExist as e:
         return f"Error sending welcome email: {str(e)}"
 
@@ -112,24 +121,27 @@ def send_team_invitation_email(user_id, team_id, inviter_id):
     """Send team invitation email."""
     try:
         from .models import Team
-        
+
         user = User.objects.get(id=user_id)
         team = Team.objects.get(id=team_id)
         inviter = User.objects.get(id=inviter_id)
-        
-        subject = f'You\'ve been invited to join {team.name} on FlowSketch'
-        
+
+        subject = f"You've been invited to join {team.name} on FlowSketch"
+
         # Render HTML email template
-        html_message = render_to_string('users/emails/team_invitation_email.html', {
-            'user': user,
-            'team': team,
-            'inviter': inviter,
-            'invitation_url': f"{settings.FRONTEND_URL}/teams/join/{team.id}",
-        })
-        
+        html_message = render_to_string(
+            "users/emails/team_invitation_email.html",
+            {
+                "user": user,
+                "team": team,
+                "inviter": inviter,
+                "invitation_url": f"{settings.FRONTEND_URL}/teams/join/{team.id}",
+            },
+        )
+
         # Create plain text version
         plain_message = strip_tags(html_message)
-        
+
         send_mail(
             subject=subject,
             message=plain_message,
@@ -138,8 +150,8 @@ def send_team_invitation_email(user_id, team_id, inviter_id):
             html_message=html_message,
             fail_silently=False,
         )
-        
+
         return f"Team invitation email sent to {user.email}"
-        
+
     except (User.DoesNotExist, Team.DoesNotExist) as e:
         return f"Error sending team invitation email: {str(e)}"

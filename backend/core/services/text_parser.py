@@ -1,5 +1,5 @@
 """
-Text parsing service for extracting 
+Text parsing service for extracting
 entities and relationships from unstructured text.
 """
 

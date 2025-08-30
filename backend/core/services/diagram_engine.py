@@ -68,7 +68,7 @@ class MermaidShapes(Enum):
 
 class ValidationSeverity(Enum):
     """Validation issue severity levels."""
-    
+
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
@@ -77,7 +77,7 @@ class ValidationSeverity(Enum):
 @dataclass
 class ValidationIssue:
     """Represents a validation issue."""
-    
+
     severity: ValidationSeverity
     code: str
     message: str
@@ -88,7 +88,7 @@ class ValidationIssue:
 @dataclass
 class ValidationResult:
     """Comprehensive validation result."""
-    
+
     is_valid: bool
     issues: List[ValidationIssue]
     warnings: List[ValidationIssue]
@@ -97,7 +97,7 @@ class ValidationResult:
 
 class DiagramValidationError(Exception):
     """Exception raised when diagram validation fails."""
-    
+
     def __init__(self, message: str, validation_result: ValidationResult):
         super().__init__(message)
         self.validation_result = validation_result
@@ -105,7 +105,7 @@ class DiagramValidationError(Exception):
 
 class DiagramGenerationError(Exception):
     """Exception raised when diagram generation fails."""
-    
+
     def __init__(self, message: str, stage: str, details: Optional[Dict] = None):
         super().__init__(message)
         self.stage = stage
@@ -161,29 +161,29 @@ class DiagramEngine:
         try:
             # Validate input content
             self._validate_input_content(content)
-            
+
             self._reset_counters()
-            
+
             # Generate nodes from entities
             try:
                 nodes = self._generate_nodes(content.entities)
             except Exception as e:
                 raise DiagramGenerationError(
-                    f"Failed to generate nodes: {str(e)}", 
+                    f"Failed to generate nodes: {str(e)}",
                     "node_generation",
-                    {"entity_count": len(content.entities)}
+                    {"entity_count": len(content.entities)},
                 )
-            
+
             # Generate edges from relationships
             try:
                 edges = self._generate_edges(content.relationships)
             except Exception as e:
                 raise DiagramGenerationError(
-                    f"Failed to generate edges: {str(e)}", 
+                    f"Failed to generate edges: {str(e)}",
                     "edge_generation",
-                    {"relationship_count": len(content.relationships)}
+                    {"relationship_count": len(content.relationships)},
                 )
-            
+
             # Generate Mermaid syntax based on diagram type
             try:
                 mermaid_syntax = self._generate_mermaid_syntax(
@@ -191,14 +191,14 @@ class DiagramEngine:
                 )
             except Exception as e:
                 raise DiagramGenerationError(
-                    f"Failed to generate Mermaid syntax: {str(e)}", 
+                    f"Failed to generate Mermaid syntax: {str(e)}",
                     "syntax_generation",
-                    {"diagram_type": content.suggested_diagram_type.value}
+                    {"diagram_type": content.suggested_diagram_type.value},
                 )
-            
+
             # Create layout configuration
             layout_config = self._generate_layout_config(content.suggested_diagram_type)
-            
+
             # Create metadata
             metadata = {
                 "entity_count": str(len(content.entities)),
@@ -206,7 +206,7 @@ class DiagramEngine:
                 "confidence": str(content.confidence),
                 "original_text_length": str(len(content.raw_text)),
             }
-            
+
             # Apply auto-layout positioning
             try:
                 positioned_nodes = self._apply_auto_layout(
@@ -214,11 +214,11 @@ class DiagramEngine:
                 )
             except Exception as e:
                 raise DiagramGenerationError(
-                    f"Failed to apply auto-layout: {str(e)}", 
+                    f"Failed to apply auto-layout: {str(e)}",
                     "layout_generation",
-                    {"node_count": len(nodes), "edge_count": len(edges)}
+                    {"node_count": len(nodes), "edge_count": len(edges)},
                 )
-            
+
             # Create diagram data
             diagram_data = DiagramData(
                 diagram_type=content.suggested_diagram_type,
@@ -228,32 +228,33 @@ class DiagramEngine:
                 layout_config=layout_config,
                 metadata=metadata,
             )
-            
+
             # Validate the generated diagram
             validation_result = self.validate_diagram_comprehensive(diagram_data)
             if not validation_result.is_valid:
                 # Check if we have critical errors
                 critical_errors = [
-                    issue for issue in validation_result.issues 
+                    issue
+                    for issue in validation_result.issues
                     if issue.severity == ValidationSeverity.ERROR
                 ]
                 if critical_errors:
                     raise DiagramValidationError(
                         f"Generated diagram failed validation with {len(critical_errors)} critical errors",
-                        validation_result
+                        validation_result,
                     )
-            
+
             return diagram_data
-            
+
         except (DiagramGenerationError, DiagramValidationError):
             # Re-raise our custom exceptions
             raise
         except Exception as e:
             # Catch any unexpected errors
             raise DiagramGenerationError(
-                f"Unexpected error during diagram generation: {str(e)}", 
+                f"Unexpected error during diagram generation: {str(e)}",
                 "unknown",
-                {"error_type": type(e).__name__}
+                {"error_type": type(e).__name__},
             )
 
     def _reset_counters(self):
@@ -875,129 +876,169 @@ class DiagramEngine:
 
         validation_result["is_valid"] = all(validation_result.values())
         return validation_result
-    
-    def validate_diagram_comprehensive(self, diagram_data: DiagramData) -> ValidationResult:
+
+    def validate_diagram_comprehensive(
+        self, diagram_data: DiagramData
+    ) -> ValidationResult:
         """Comprehensive validation of the generated diagram."""
         issues = []
         warnings = []
         metadata = {}
-        
+
         # Basic structural validation
         if len(diagram_data.nodes) == 0:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                code="NO_NODES",
-                message="Diagram has no nodes",
-                suggested_fix="Ensure input text contains identifiable entities"
-            ))
-        
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    code="NO_NODES",
+                    message="Diagram has no nodes",
+                    suggested_fix="Ensure input text contains identifiable entities",
+                )
+            )
+
         # Validate Mermaid syntax
         if not self._validate_mermaid_syntax(diagram_data.mermaid_syntax):
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                code="INVALID_SYNTAX",
-                message="Generated Mermaid syntax is invalid",
-                details={"first_line": diagram_data.mermaid_syntax.split('\n')[0] if diagram_data.mermaid_syntax else ""},
-                suggested_fix="Check diagram type and syntax generation logic"
-            ))
-        
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    code="INVALID_SYNTAX",
+                    message="Generated Mermaid syntax is invalid",
+                    details={
+                        "first_line": (
+                            diagram_data.mermaid_syntax.split("\n")[0]
+                            if diagram_data.mermaid_syntax
+                            else ""
+                        )
+                    },
+                    suggested_fix="Check diagram type and syntax generation logic",
+                )
+            )
+
         # Validate node labels
-        empty_label_nodes = [node for node in diagram_data.nodes if not node.label.strip()]
+        empty_label_nodes = [
+            node for node in diagram_data.nodes if not node.label.strip()
+        ]
         if empty_label_nodes:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                code="EMPTY_LABELS",
-                message=f"{len(empty_label_nodes)} nodes have empty labels",
-                details={"node_ids": [node.id for node in empty_label_nodes]},
-                suggested_fix="Ensure all entities have meaningful names"
-            ))
-        
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    code="EMPTY_LABELS",
+                    message=f"{len(empty_label_nodes)} nodes have empty labels",
+                    details={"node_ids": [node.id for node in empty_label_nodes]},
+                    suggested_fix="Ensure all entities have meaningful names",
+                )
+            )
+
         # Validate edge references
         if not self._validate_edge_references(diagram_data.nodes, diagram_data.edges):
-            orphaned_edges = self._find_orphaned_edges(diagram_data.nodes, diagram_data.edges)
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                code="ORPHANED_EDGES",
-                message=f"{len(orphaned_edges)} edges reference non-existent nodes",
-                details={"orphaned_edges": [f"{edge.source_id}->{edge.target_id}" for edge in orphaned_edges]},
-                suggested_fix="Ensure all relationships reference valid entities"
-            ))
-        
+            orphaned_edges = self._find_orphaned_edges(
+                diagram_data.nodes, diagram_data.edges
+            )
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    code="ORPHANED_EDGES",
+                    message=f"{len(orphaned_edges)} edges reference non-existent nodes",
+                    details={
+                        "orphaned_edges": [
+                            f"{edge.source_id}->{edge.target_id}"
+                            for edge in orphaned_edges
+                        ]
+                    },
+                    suggested_fix="Ensure all relationships reference valid entities",
+                )
+            )
+
         # Validate node positions
-        unpositioned_nodes = [node for node in diagram_data.nodes if node.position is None]
+        unpositioned_nodes = [
+            node for node in diagram_data.nodes if node.position is None
+        ]
         if unpositioned_nodes:
-            warnings.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                code="UNPOSITIONED_NODES",
-                message=f"{len(unpositioned_nodes)} nodes lack position information",
-                details={"node_ids": [node.id for node in unpositioned_nodes]},
-                suggested_fix="Apply auto-layout to position nodes"
-            ))
-        
+            warnings.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    code="UNPOSITIONED_NODES",
+                    message=f"{len(unpositioned_nodes)} nodes lack position information",
+                    details={"node_ids": [node.id for node in unpositioned_nodes]},
+                    suggested_fix="Apply auto-layout to position nodes",
+                )
+            )
+
         # Check for overlapping nodes
         overlapping_pairs = self._find_overlapping_nodes(diagram_data.nodes)
         if overlapping_pairs:
-            warnings.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                code="OVERLAPPING_NODES",
-                message=f"{len(overlapping_pairs)} pairs of nodes have overlapping positions",
-                details={"overlapping_pairs": overlapping_pairs},
-                suggested_fix="Adjust layout spacing or apply force-directed layout"
-            ))
-        
+            warnings.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    code="OVERLAPPING_NODES",
+                    message=f"{len(overlapping_pairs)} pairs of nodes have overlapping positions",
+                    details={"overlapping_pairs": overlapping_pairs},
+                    suggested_fix="Adjust layout spacing or apply force-directed layout",
+                )
+            )
+
         # Check diagram complexity
         complexity_score = self._calculate_complexity_score(diagram_data)
         metadata["complexity_score"] = complexity_score
-        
+
         if complexity_score > 0.8:
-            warnings.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                code="HIGH_COMPLEXITY",
-                message="Diagram has high complexity and may be difficult to read",
-                details={"complexity_score": str(complexity_score)},
-                suggested_fix="Consider breaking into multiple diagrams or simplifying relationships"
-            ))
-        
+            warnings.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    code="HIGH_COMPLEXITY",
+                    message="Diagram has high complexity and may be difficult to read",
+                    details={"complexity_score": str(complexity_score)},
+                    suggested_fix="Consider breaking into multiple diagrams or simplifying relationships",
+                )
+            )
+
         # Check for isolated nodes
-        isolated_nodes = self._find_isolated_nodes(diagram_data.nodes, diagram_data.edges)
+        isolated_nodes = self._find_isolated_nodes(
+            diagram_data.nodes, diagram_data.edges
+        )
         if isolated_nodes:
-            warnings.append(ValidationIssue(
-                severity=ValidationSeverity.INFO,
-                code="ISOLATED_NODES",
-                message=f"{len(isolated_nodes)} nodes have no connections",
-                details={"isolated_nodes": [node.id for node in isolated_nodes]},
-                suggested_fix="Consider adding relationships or removing isolated entities"
-            ))
-        
+            warnings.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.INFO,
+                    code="ISOLATED_NODES",
+                    message=f"{len(isolated_nodes)} nodes have no connections",
+                    details={"isolated_nodes": [node.id for node in isolated_nodes]},
+                    suggested_fix="Consider adding relationships or removing isolated entities",
+                )
+            )
+
         # Validate diagram type appropriateness
         type_validation = self._validate_diagram_type_appropriateness(diagram_data)
         if not type_validation["is_appropriate"]:
-            warnings.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                code="INAPPROPRIATE_TYPE",
-                message=f"Current diagram type may not be optimal for this content",
-                details=type_validation,
-                suggested_fix=f"Consider using {type_validation.get('suggested_type', 'a different')} diagram type"
-            ))
-        
+            warnings.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    code="INAPPROPRIATE_TYPE",
+                    message=f"Current diagram type may not be optimal for this content",
+                    details=type_validation,
+                    suggested_fix=f"Consider using {type_validation.get('suggested_type', 'a different')} diagram type",
+                )
+            )
+
         # Calculate metadata
-        metadata.update({
-            "node_count": len(diagram_data.nodes),
-            "edge_count": len(diagram_data.edges),
-            "syntax_length": len(diagram_data.mermaid_syntax),
-            "has_positions": sum(1 for node in diagram_data.nodes if node.position is not None),
-            "error_count": len(issues),
-            "warning_count": len(warnings),
-        })
-        
+        metadata.update(
+            {
+                "node_count": len(diagram_data.nodes),
+                "edge_count": len(diagram_data.edges),
+                "syntax_length": len(diagram_data.mermaid_syntax),
+                "has_positions": sum(
+                    1 for node in diagram_data.nodes if node.position is not None
+                ),
+                "error_count": len(issues),
+                "warning_count": len(warnings),
+            }
+        )
+
         # Determine overall validity
         is_valid = len(issues) == 0
-        
+
         return ValidationResult(
-            is_valid=is_valid,
-            issues=issues,
-            warnings=warnings,
-            metadata=metadata
+            is_valid=is_valid, issues=issues, warnings=warnings, metadata=metadata
         )
 
     def _validate_mermaid_syntax(self, syntax: str) -> bool:
@@ -1027,131 +1068,135 @@ class DiagramEngine:
                 return False
 
         return True
-    
+
     def _validate_input_content(self, content: ParsedContent) -> None:
         """Validate input parsed content."""
         if not content:
             raise DiagramGenerationError("Input content is None", "input_validation")
-        
+
         if not content.raw_text or not content.raw_text.strip():
             raise DiagramGenerationError("Input text is empty", "input_validation")
-        
+
         if not content.entities and not content.relationships:
             raise DiagramGenerationError(
-                "No entities or relationships found in input", 
+                "No entities or relationships found in input",
                 "input_validation",
-                {"text_length": len(content.raw_text)}
+                {"text_length": len(content.raw_text)},
             )
-        
+
         if content.confidence < 0.1:
             raise DiagramGenerationError(
-                f"Input parsing confidence too low: {content.confidence}", 
+                f"Input parsing confidence too low: {content.confidence}",
                 "input_validation",
-                {"confidence": content.confidence}
+                {"confidence": content.confidence},
             )
-    
+
     def _find_orphaned_edges(self, nodes: List[Node], edges: List[Edge]) -> List[Edge]:
         """Find edges that reference non-existent nodes."""
         node_ids = {node.id for node in nodes}
         orphaned = []
-        
+
         for edge in edges:
             if edge.source_id not in node_ids or edge.target_id not in node_ids:
                 orphaned.append(edge)
-        
+
         return orphaned
-    
+
     def _find_overlapping_nodes(self, nodes: List[Node]) -> List[str]:
         """Find pairs of nodes with overlapping positions."""
         overlapping = []
         positioned_nodes = [node for node in nodes if node.position is not None]
-        
+
         for i, node1 in enumerate(positioned_nodes):
-            for node2 in positioned_nodes[i+1:]:
+            for node2 in positioned_nodes[i + 1 :]:
                 # Check if nodes are too close (within 50 pixels)
                 dx = abs(node1.position.x - node2.position.x)
                 dy = abs(node1.position.y - node2.position.y)
-                
+
                 if dx < 50 and dy < 50:
                     overlapping.append(f"{node1.id}-{node2.id}")
-        
+
         return overlapping
-    
+
     def _find_isolated_nodes(self, nodes: List[Node], edges: List[Edge]) -> List[Node]:
         """Find nodes that have no connections."""
         connected_nodes = set()
-        
+
         for edge in edges:
             connected_nodes.add(edge.source_id)
             connected_nodes.add(edge.target_id)
-        
+
         isolated = [node for node in nodes if node.id not in connected_nodes]
         return isolated
-    
+
     def _calculate_complexity_score(self, diagram_data: DiagramData) -> float:
         """Calculate a complexity score for the diagram (0.0 to 1.0)."""
         node_count = len(diagram_data.nodes)
         edge_count = len(diagram_data.edges)
-        
+
         if node_count == 0:
             return 0.0
-        
+
         # Base complexity on node count and edge density
         node_complexity = min(node_count / 20.0, 1.0)  # 20+ nodes = high complexity
         edge_density = edge_count / max(node_count, 1)
-        edge_complexity = min(edge_density / 3.0, 1.0)  # 3+ edges per node = high complexity
-        
+        edge_complexity = min(
+            edge_density / 3.0, 1.0
+        )  # 3+ edges per node = high complexity
+
         # Combine factors
         complexity = (node_complexity * 0.6) + (edge_complexity * 0.4)
         return min(complexity, 1.0)
-    
-    def _validate_diagram_type_appropriateness(self, diagram_data: DiagramData) -> Dict[str, Union[bool, str]]:
+
+    def _validate_diagram_type_appropriateness(
+        self, diagram_data: DiagramData
+    ) -> Dict[str, Union[bool, str]]:
         """Validate if the chosen diagram type is appropriate for the content."""
         node_types = [node.entity_type for node in diagram_data.nodes]
         edge_types = [edge.relationship_type for edge in diagram_data.edges]
-        
+
         # Count entity types
         type_counts = {}
         for node_type in node_types:
             type_counts[node_type] = type_counts.get(node_type, 0) + 1
-        
+
         current_type = diagram_data.diagram_type
-        
+
         # Rules for diagram type appropriateness
         if current_type == DiagramType.ERD:
             # ERD should have mostly data/object entities
             data_entities = type_counts.get("data", 0) + type_counts.get("object", 0)
             total_entities = len(diagram_data.nodes)
-            
+
             if total_entities > 0 and data_entities / total_entities < 0.5:
                 return {
                     "is_appropriate": False,
                     "reason": "ERD should primarily contain data entities",
-                    "suggested_type": "flowchart"
+                    "suggested_type": "flowchart",
                 }
-        
+
         elif current_type == DiagramType.SEQUENCE:
             # Sequence diagrams should have actors and systems
             actor_entities = type_counts.get("actor", 0) + type_counts.get("system", 0)
             total_entities = len(diagram_data.nodes)
-            
+
             if total_entities > 0 and actor_entities / total_entities < 0.3:
                 return {
                     "is_appropriate": False,
                     "reason": "Sequence diagrams should have actors or systems",
-                    "suggested_type": "flowchart"
+                    "suggested_type": "flowchart",
                 }
-        
+
         elif current_type == DiagramType.PROCESS:
             # Process diagrams should have process entities
             process_entities = type_counts.get("process", 0)
             total_entities = len(diagram_data.nodes)
-            
+
             if total_entities > 0 and process_entities / total_entities < 0.3:
                 return {
                     "is_appropriate": False,
                     "reason": "Process diagrams should contain process entities",
-                    "suggested_type": "flowchart"
+                    "suggested_type": "flowchart",
                 }
-        
+
         return {"is_appropriate": True}

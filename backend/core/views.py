@@ -1,29 +1,50 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (OpenApiExample, OpenApiParameter,
-                                   extend_schema, extend_schema_view)
+from drf_spectacular.utils import (
+    OpenApiExample,
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import (CanonicalModel, DiagramEdge, DiagramNode, Entity, Project,
-                     Relationship, Specification)
-from .serializers import (CanonicalModelSerializer, DiagramDataSerializer,
-                          DiagramEdgeSerializer,
-                          DiagramErrorResponseSerializer,
-                          DiagramGenerationRequestSerializer,
-                          DiagramNodeSerializer, EntitySerializer,
-                          GeneratedDiagramSerializer,
-                          GeneratedSpecificationSerializer,
-                          ParsedContentSerializer, ProjectCreateSerializer,
-                          ProjectSerializer, RelationshipSerializer,
-                          SpecificationGenerationRequestSerializer,
-                          SpecificationSerializer, TextParseRequestSerializer)
-from .services.diagram_engine import (DiagramEngine, DiagramGenerationError,
-                                      DiagramValidationError)
-from .services.specification_generator import (SpecificationGenerationError,
-                                               SpecificationGenerator)
+from .models import (
+    DiagramEdge,
+    DiagramNode,
+    Entity,
+    Project,
+    Relationship,
+    Specification,
+)
+from .serializers import (
+    CanonicalModelSerializer,
+    DiagramDataSerializer,
+    DiagramEdgeSerializer,
+    DiagramErrorResponseSerializer,
+    DiagramGenerationRequestSerializer,
+    DiagramNodeSerializer,
+    EntitySerializer,
+    GeneratedDiagramSerializer,
+    GeneratedSpecificationSerializer,
+    ParsedContentSerializer,
+    ProjectCreateSerializer,
+    ProjectSerializer,
+    RelationshipSerializer,
+    SpecificationGenerationRequestSerializer,
+    SpecificationSerializer,
+    TextParseRequestSerializer,
+)
+from .services.diagram_engine import (
+    DiagramEngine,
+    DiagramGenerationError,
+    DiagramValidationError,
+)
+from .services.specification_generator import (
+    SpecificationGenerationError,
+    SpecificationGenerator,
+)
 from .services.text_parser import DiagramType, TextParserService
 
 
@@ -379,7 +400,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-    
+
     @extend_schema(
         summary="Generate specification from text",
         description="Parse unstructured text, generate a diagram, and create a comprehensive specification document with acceptance criteria.",
@@ -388,223 +409,233 @@ class ProjectViewSet(viewsets.ModelViewSet):
             200: GeneratedSpecificationSerializer,
             400: OpenApiTypes.OBJECT,
             422: "DiagramErrorResponseSerializer",
-            500: "DiagramErrorResponseSerializer"
+            500: "DiagramErrorResponseSerializer",
         },
         examples=[
             OpenApiExample(
-                'User authentication flow',
-                summary='Generate specification from authentication workflow',
-                description='Example of generating a complete specification from user authentication description',
+                "User authentication flow",
+                summary="Generate specification from authentication workflow",
+                description="Example of generating a complete specification from user authentication description",
                 value={
-                    'text': 'User enters credentials, system validates against database, generates JWT token, and returns success response with user profile.',
-                    'project_name': 'Authentication System'
+                    "text": "User enters credentials, system validates against database, generates JWT token, and returns success response with user profile.",
+                    "project_name": "Authentication System",
                 },
                 request_only=True,
             ),
             OpenApiExample(
-                'E-commerce order process',
-                summary='Generate specification from order processing',
-                description='Example of generating specification from e-commerce workflow',
+                "E-commerce order process",
+                summary="Generate specification from order processing",
+                description="Example of generating specification from e-commerce workflow",
                 value={
-                    'text': 'Customer adds items to cart, proceeds to checkout, payment service processes payment, inventory is updated, and order confirmation is sent.',
-                    'project_name': 'E-commerce Platform',
-                    'diagram_type': 'process'
+                    "text": "Customer adds items to cart, proceeds to checkout, payment service processes payment, inventory is updated, and order confirmation is sent.",
+                    "project_name": "E-commerce Platform",
+                    "diagram_type": "process",
                 },
                 request_only=True,
             ),
             OpenApiExample(
-                'API with JavaScript tests',
-                summary='Generate specification with JavaScript test scaffold',
-                description='Example of generating specification with JavaScript/Jest test files',
+                "API with JavaScript tests",
+                summary="Generate specification with JavaScript test scaffold",
+                description="Example of generating specification with JavaScript/Jest test files",
                 value={
-                    'text': 'API receives request, validates input, processes data, and returns response.',
-                    'project_name': 'REST API',
-                    'include_tests': True,
-                    'test_language': 'javascript'
+                    "text": "API receives request, validates input, processes data, and returns response.",
+                    "project_name": "REST API",
+                    "include_tests": True,
+                    "test_language": "javascript",
                 },
                 request_only=True,
             ),
         ],
-        tags=["Projects", "Specifications", "AI"]
+        tags=["Projects", "Specifications", "AI"],
     )
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def generate_specification(self, request, pk=None):
         """Generate a complete specification document from unstructured text."""
         project = self.get_object()
-        
+
         # Validate input
         serializer = SpecificationGenerationRequestSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        text = serializer.validated_data['text']
-        project_name = serializer.validated_data.get('project_name', project.name)
-        forced_diagram_type = serializer.validated_data.get('diagram_type')
-        include_tests = serializer.validated_data.get('include_tests', True)
-        test_language_str = serializer.validated_data.get('test_language', 'python')
-        
+
+        text = serializer.validated_data["text"]
+        project_name = serializer.validated_data.get("project_name", project.name)
+        forced_diagram_type = serializer.validated_data.get("diagram_type")
+        include_tests = serializer.validated_data.get("include_tests", True)
+        test_language_str = serializer.validated_data.get("test_language", "python")
+
         try:
             # Initialize services
             parser_service = TextParserService()
             diagram_engine = DiagramEngine()
             spec_generator = SpecificationGenerator()
-            
+
             # Validate test language
             try:
-                from core.services.specification_generator import \
-                    ProgrammingLanguage
+                from core.services.specification_generator import ProgrammingLanguage
+
                 test_language = ProgrammingLanguage(test_language_str.lower())
             except ValueError:
                 return Response(
-                    {'error': f'Invalid test language: {test_language_str}. Valid languages: python, javascript, java, csharp, go, rust'}, 
-                    status=status.HTTP_400_BAD_REQUEST
+                    {
+                        "error": f"Invalid test language: {test_language_str}. Valid languages: python, javascript, java, csharp, go, rust"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-            
+
             # Parse the text
             parsed_content = parser_service.parse_text(text)
-            
+
             # Override diagram type if specified
             if forced_diagram_type:
                 try:
-                    parsed_content.suggested_diagram_type = DiagramType(forced_diagram_type.lower())
+                    parsed_content.suggested_diagram_type = DiagramType(
+                        forced_diagram_type.lower()
+                    )
                 except ValueError:
                     return Response(
-                        {'error': f'Invalid diagram type: {forced_diagram_type}. Valid types: flowchart, erd, sequence, class, process'}, 
-                        status=status.HTTP_400_BAD_REQUEST
+                        {
+                            "error": f"Invalid diagram type: {forced_diagram_type}. Valid types: flowchart, erd, sequence, class, process"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
                     )
-            
+
             # Generate the diagram
             diagram_data = diagram_engine.generate_diagram(parsed_content)
-            
+
             # Generate the specification
             specification = spec_generator.generate_specification(
-                diagram_data, 
+                diagram_data,
                 project_name,
                 include_tests=include_tests,
-                test_language=test_language
+                test_language=test_language,
             )
-            
+
             # Serialize the response
             response_data = {
-                'title': specification.title,
-                'sections': [
+                "title": specification.title,
+                "sections": [
                     {
-                        'title': section.title,
-                        'content': section.content,
-                        'section_type': section.section_type.value,
-                        'order': section.order
+                        "title": section.title,
+                        "content": section.content,
+                        "section_type": section.section_type.value,
+                        "order": section.order,
                     }
                     for section in specification.sections
                 ],
-                'acceptance_criteria': [
+                "acceptance_criteria": [
                     {
-                        'id': criterion.id,
-                        'description': criterion.description,
-                        'priority': criterion.priority,
-                        'category': criterion.category,
-                        'related_entities': criterion.related_entities,
-                        'test_scenarios': criterion.test_scenarios
+                        "id": criterion.id,
+                        "description": criterion.description,
+                        "priority": criterion.priority,
+                        "category": criterion.category,
+                        "related_entities": criterion.related_entities,
+                        "test_scenarios": criterion.test_scenarios,
                     }
                     for criterion in specification.acceptance_criteria
                 ],
-                'metadata': {
+                "metadata": {
                     **specification.metadata,
-                    'diagram_info': {
-                        'type': diagram_data.diagram_type.value,
-                        'node_count': len(diagram_data.nodes),
-                        'edge_count': len(diagram_data.edges)
-                    }
+                    "diagram_info": {
+                        "type": diagram_data.diagram_type.value,
+                        "node_count": len(diagram_data.nodes),
+                        "edge_count": len(diagram_data.edges),
+                    },
                 },
-                'markdown_content': specification.markdown_content,
-                'test_scaffold': {
-                    'language': specification.test_scaffold.language.value,
-                    'test_files': [
-                        {
-                            'filename': file.filename,
-                            'language': file.language.value,
-                            'imports': file.imports,
-                            'setup_code': file.setup_code,
-                            'test_cases': [
-                                {
-                                    'name': case.name,
-                                    'description': case.description,
-                                    'test_type': case.test_type.value,
-                                    'setup_code': case.setup_code,
-                                    'test_code': case.test_code,
-                                    'teardown_code': case.teardown_code,
-                                    'assertions': case.assertions,
-                                    'related_acceptance_criteria': case.related_acceptance_criteria
-                                }
-                                for case in file.test_cases
-                            ],
-                            'helper_methods': file.helper_methods,
-                            'full_content': file.full_content
-                        }
-                        for file in specification.test_scaffold.test_files
-                    ],
-                    'setup_instructions': specification.test_scaffold.setup_instructions,
-                    'run_instructions': specification.test_scaffold.run_instructions,
-                    'dependencies': specification.test_scaffold.dependencies,
-                    'metadata': specification.test_scaffold.metadata
-                } if specification.test_scaffold else None
+                "markdown_content": specification.markdown_content,
+                "test_scaffold": (
+                    {
+                        "language": specification.test_scaffold.language.value,
+                        "test_files": [
+                            {
+                                "filename": file.filename,
+                                "language": file.language.value,
+                                "imports": file.imports,
+                                "setup_code": file.setup_code,
+                                "test_cases": [
+                                    {
+                                        "name": case.name,
+                                        "description": case.description,
+                                        "test_type": case.test_type.value,
+                                        "setup_code": case.setup_code,
+                                        "test_code": case.test_code,
+                                        "teardown_code": case.teardown_code,
+                                        "assertions": case.assertions,
+                                        "related_acceptance_criteria": case.related_acceptance_criteria,
+                                    }
+                                    for case in file.test_cases
+                                ],
+                                "helper_methods": file.helper_methods,
+                                "full_content": file.full_content,
+                            }
+                            for file in specification.test_scaffold.test_files
+                        ],
+                        "setup_instructions": specification.test_scaffold.setup_instructions,
+                        "run_instructions": specification.test_scaffold.run_instructions,
+                        "dependencies": specification.test_scaffold.dependencies,
+                        "metadata": specification.test_scaffold.metadata,
+                    }
+                    if specification.test_scaffold
+                    else None
+                ),
             }
-            
+
             response_serializer = GeneratedSpecificationSerializer(response_data)
             return Response(response_serializer.data, status=status.HTTP_200_OK)
-            
+
         except SpecificationGenerationError as e:
             return Response(
                 {
-                    'error': str(e),
-                    'error_type': 'specification_generation_error',
-                    'stage': e.stage,
-                    'details': e.details
-                }, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    "error": str(e),
+                    "error_type": "specification_generation_error",
+                    "stage": e.stage,
+                    "details": e.details,
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except DiagramValidationError as e:
             return Response(
                 {
-                    'error': f'Diagram validation failed: {str(e)}',
-                    'error_type': 'diagram_validation_error',
-                    'validation_details': {
-                        'is_valid': e.validation_result.is_valid,
-                        'issues': [
+                    "error": f"Diagram validation failed: {str(e)}",
+                    "error_type": "diagram_validation_error",
+                    "validation_details": {
+                        "is_valid": e.validation_result.is_valid,
+                        "issues": [
                             {
-                                'severity': issue.severity.value,
-                                'code': issue.code,
-                                'message': issue.message,
-                                'details': issue.details,
-                                'suggested_fix': issue.suggested_fix
+                                "severity": issue.severity.value,
+                                "code": issue.code,
+                                "message": issue.message,
+                                "details": issue.details,
+                                "suggested_fix": issue.suggested_fix,
                             }
                             for issue in e.validation_result.issues
-                        ]
-                    }
-                }, 
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                        ],
+                    },
+                },
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         except DiagramGenerationError as e:
             return Response(
                 {
-                    'error': f'Diagram generation failed: {str(e)}',
-                    'error_type': 'diagram_generation_error',
-                    'stage': e.stage,
-                    'details': e.details
-                }, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    "error": f"Diagram generation failed: {str(e)}",
+                    "error_type": "diagram_generation_error",
+                    "stage": e.stage,
+                    "details": e.details,
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except RuntimeError as e:
             return Response(
-                {'error': str(e), 'error_type': 'runtime_error'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(e), "error_type": "runtime_error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception as e:
             return Response(
                 {
-                    'error': 'An unexpected error occurred while generating the specification',
-                    'error_type': 'unknown_error'
-                }, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    "error": "An unexpected error occurred while generating the specification",
+                    "error_type": "unknown_error",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 

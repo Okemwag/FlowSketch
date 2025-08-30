@@ -17,88 +17,199 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='EmailVerificationToken',
+            name="EmailVerificationToken",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('token', models.CharField(max_length=64, unique=True)),
-                ('code', models.CharField(max_length=6)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField()),
-                ('is_used', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("token", models.CharField(max_length=64, unique=True)),
+                ("code", models.CharField(max_length=6)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("expires_at", models.DateTimeField()),
+                ("is_used", models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PasswordResetToken',
+            name="PasswordResetToken",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('token', models.CharField(max_length=64, unique=True)),
-                ('code', models.CharField(max_length=6)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField()),
-                ('is_used', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("token", models.CharField(max_length=64, unique=True)),
+                ("code", models.CharField(max_length=6)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("expires_at", models.DateTimeField()),
+                ("is_used", models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Team',
+            name="Team",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=100)),
-                ('description', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='owned_teams', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("description", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="owned_teams",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['name'],
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='TeamMembership',
+            name="TeamMembership",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('role', models.CharField(choices=[('owner', 'Owner'), ('admin', 'Admin'), ('member', 'Member'), ('viewer', 'Viewer')], default='member', max_length=10)),
-                ('joined_at', models.DateTimeField(auto_now_add=True)),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.team')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[
+                            ("owner", "Owner"),
+                            ("admin", "Admin"),
+                            ("member", "Member"),
+                            ("viewer", "Viewer"),
+                        ],
+                        default="member",
+                        max_length=10,
+                    ),
+                ),
+                ("joined_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="users.team"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('user', 'team')},
+                "unique_together": {("user", "team")},
             },
         ),
         migrations.AddField(
-            model_name='team',
-            name='members',
-            field=models.ManyToManyField(related_name='teams', through='users.TeamMembership', to=settings.AUTH_USER_MODEL),
+            model_name="team",
+            name="members",
+            field=models.ManyToManyField(
+                related_name="teams",
+                through="users.TeamMembership",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.CreateModel(
-            name='UserProfile',
+            name="UserProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('avatar', models.ImageField(blank=True, null=True, upload_to='avatars/')),
-                ('bio', models.TextField(blank=True, max_length=500)),
-                ('phone_number', models.CharField(blank=True, max_length=20)),
-                ('company', models.CharField(blank=True, max_length=100)),
-                ('job_title', models.CharField(blank=True, max_length=100)),
-                ('timezone', models.CharField(default='UTC', max_length=50)),
-                ('is_email_verified', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "avatar",
+                    models.ImageField(blank=True, null=True, upload_to="avatars/"),
+                ),
+                ("bio", models.TextField(blank=True, max_length=500)),
+                ("phone_number", models.CharField(blank=True, max_length=20)),
+                ("company", models.CharField(blank=True, max_length=100)),
+                ("job_title", models.CharField(blank=True, max_length=100)),
+                ("timezone", models.CharField(default="UTC", max_length=50)),
+                ("is_email_verified", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='UserSession',
+            name="UserSession",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_key', models.CharField(max_length=40, unique=True)),
-                ('ip_address', models.GenericIPAddressField()),
-                ('user_agent', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('last_activity', models.DateTimeField(auto_now=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sessions', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("session_key", models.CharField(max_length=40, unique=True)),
+                ("ip_address", models.GenericIPAddressField()),
+                ("user_agent", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("last_activity", models.DateTimeField(auto_now=True)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sessions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]
